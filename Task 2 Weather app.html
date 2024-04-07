@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weather App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to bottom, #77A1D3, #79CBCA);
+      background-size: cover;
+      background-repeat: no-repeat;
+      height: 100vh;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #weather-container {
+      background-color: rgba(255, 255, 255, 0.8);
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      text-align: center;
+      transition: all 0.3s ease;
+      max-width: 400px;
+      width: 90%;
+      animation: fadeInDown 1s ease;
+    }
+
+    @keyframes fadeInDown {
+      0% {
+        opacity: 0;
+        transform: translateY(-50px);
+      }
+
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    #weather-icon {
+      width: 100px;
+      height: 100px;
+      margin: 0 auto;
+    }
+
+    #weather-info {
+      margin-top: 20px;
+    }
+
+    #time {
+      font-size: 18px;
+      margin-top: 10px;
+    }
+
+    #temp {
+      font-size: 24px;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    #loading {
+      display: none;
+    }
+
+    input[type="text"] {
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: none;
+      outline: none;
+      width: 100%;
+      margin-bottom: 10px;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: none;
+      background-color: #4CAF50;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    /* Loading animation */
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    #loading::after {
+      content: '';
+      display: block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid #ccc;
+      border-top-color: #333;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 10px auto;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="weather-container">
+    <h2>Weather App</h2>
+    <div id="time"></div>
+    <form id="weather-form">
+      <input type="text" id="city" placeholder="Enter city name">
+      <button type="submit">Get Weather</button>
+    </form>
+    <div id="loading"></div>
+    <div id="weather-icon"></div>
+    <div id="weather-info"></div>
+    <div id="temp"></div>
+  </div>
+
+  <script>
+    async function getWeatherData(city) {
+      const apiKey = '6b556005dae9d19ffd7918ac69d92c9f'; // Updated API key
+      const apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
+
+      try {
+        const response = await fetch(apiUrl);
+        if (!response.ok) {
+          throw new Error('City not found');
+        }
+        const data = await response.json();
+        return data;
+      } catch (error) {
+        console.error('Error fetching weather data:', error);
+        throw error;
+      }
+    }
+
+    function displayWeather(weatherData) {
+      const weatherIcon = document.getElementById('weather-icon');
+      const weatherInfo = document.getElementById('weather-info');
+      const temperatureBox = document.getElementById('temp');
+
+      const iconUrl = `http://openweathermap.org/img/w/${weatherData.weather[0].icon}.png`;
+      weatherIcon.innerHTML = `<img src="${iconUrl}" alt="Weather Icon">`;
+
+      const temperature = weatherData.main.temp;
+      const description = weatherData.weather[0].description;
+
+      weatherInfo.innerHTML = `<p>${description}</p>`;
+
+      temperatureBox.textContent = `Temperature: ${temperature}°C`;
+    }
+
+    function showLoading() {
+      document.getElementById('loading').style.display = 'block';
+    }
+
+    function hideLoading() {
+      document.getElementById('loading').style.display = 'none';
+    }
+
+    async function handleSubmit(event) {
+      event.preventDefault();
+      const city = document.getElementById('city').value;
+      if (!city) return;
+
+      showLoading();
+
+      try {
+        const weatherData = await getWeatherData(city);
+        displayWeather(weatherData);
+      } catch (error) {
+        document.getElementById('weather-info').innerHTML = '<p>City not found</p>';
+      } finally {
+        hideLoading();
+      }
+    }
+
+    function updateTime() {
+      const now = new Date();
+      const timeElement = document.getElementById('time');
+      let hours = now.getHours();
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12 || 12;
+      const minutes = now.getMinutes().toString().padStart(2, '0');
+      const seconds = now.getSeconds().toString().padStart(2, '0');
+      timeElement.textContent = `Current time: ${hours}:${minutes}:${seconds} ${ampm}`;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      updateTime();
+      setInterval(updateTime, 1000);
+
+      const form = document.getElementById('weather-form');
+      form.addEventListener('submit', handleSubmit);
+    });
+  </script>
+</body>
+
+</html>
